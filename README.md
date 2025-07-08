@@ -4,7 +4,8 @@ React frontend for the CondoLink platform — a responsive, accessible UI built 
 
 ## Technology Stack
 
-- React  
+- React
+- TypeScript  
 - Tailwind CSS  
 - [shadcn/ui](https://ui.shadcn.com/) component library  
 - Axios for API communication  
