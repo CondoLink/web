@@ -228,7 +228,7 @@ export function MaintenanceModal({ open, onOpenChange, maintenanceToEdit = null 
                 Select Block
               </option>
               {blocks
-                .filter((block) => block.buildingId === form.buildingId)
+                .filter((block) => block.building_id === form.buildingId)
                 .map((block) => (
                   <option key={block.id} value={block.id}>
                     {block.name}
