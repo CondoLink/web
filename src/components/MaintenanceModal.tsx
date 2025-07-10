@@ -65,7 +65,7 @@ export function MaintenanceModal({ open, onOpenChange, maintenanceToEdit = null 
       });
     } else {
       // If adding new, reset and ensure buildingId is set
-      setForm((prev) => ({
+      setForm(() => ({
         ...initialFormState,
         buildingId: auth?.buildingId || 0,
       }));
@@ -228,7 +228,7 @@ export function MaintenanceModal({ open, onOpenChange, maintenanceToEdit = null 
                 Select Block
               </option>
               {blocks
-                .filter((block) => block.building_id === form.buildingId)
+                .filter((block) => block.buildingId === form.buildingId)
                 .map((block) => (
                   <option key={block.id} value={block.id}>
                     {block.name}

@@ -37,7 +37,7 @@ export function Sidebar() {
       className="flex flex-col items-center gap-6 p-4 w-16 bg-white border h-full rounded-xl"
       style={{ borderColor: "var(--color-softAqua)", borderWidth: "3px" }}
     >
-      {renderSidebarItems(auth.roleCode)}
+      {auth ? renderSidebarItems(auth.roleCode) : null}
     </nav>
   );
 }

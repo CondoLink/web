@@ -1,5 +1,7 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useMemo } from "react";
+import { createContext, useContext, useState, useEffect, useMemo } from "react";
+import type { ReactNode } from 'react'
 import axios from "axios";
+import type { AxiosInstance } from "axios";
 
 // The structure of your auth state
 export interface AuthState {
@@ -25,7 +27,7 @@ interface AuthContextType {
 	auth: AuthState | null;
 	login: (credentials: LoginInput) => Promise<{ success: boolean; message?: string }>;
 	logout: () => void;
-	axiosInstance: typeof axios;
+	axiosInstance: AxiosInstance;
 }
 
 // Create the context
@@ -43,6 +45,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 		return stored ? (JSON.parse(stored) as AuthState) : null;
 	});
 
+	// Logout
+	const logout = () => {
+		localStorage.removeItem("auth");
+		setAuth(null);
+	};
+
 	// Sync auth state to localStorage
 	useEffect(() => {
 		if (auth?.accessToken) {
@@ -53,47 +61,46 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 	}, [auth]);
 
 	// Axios instance with interceptors (to use the same baseURL across many requests)
-	const axiosInstance = useMemo(() => axios.create({
-		baseURL: import.meta.env.VITE_BASE_URL,
-		withCredentials: true
-	}), []);
+	const axiosInstance = useMemo(() => {
+		const instance = axios.create({
+			baseURL: import.meta.env.VITE_BASE_URL,
+			withCredentials: true,
+		});
 
-	axiosInstance.interceptors.response.use(
-		response => response,
-		async error => {
-			const originalRequest = error.config;
-			
-			if (error.response?.status === 401 && !originalRequest._retry && auth) {
+		instance.interceptors.response.use(
+			response => response,
+			async (error) => {
+				const originalRequest = error.config;
+				if (error.response?.status === 401 && !originalRequest._retry && auth) {
+					originalRequest._retry = true;
+					try {
+						const res = await instance.get("/auth/refresh");
+						const newAccessToken = res.data.accessToken;
 
-				console.log("Refreshing token...");
-				originalRequest._retry = true;
-				try {
-					const res = await axiosInstance.get("/auth/refresh");
-					const newAccessToken = res.data.accessToken;
+						const updatedAuth = { ...auth, accessToken: newAccessToken };
+						setAuth(updatedAuth);
+						localStorage.setItem("auth", JSON.stringify(updatedAuth));
 
-					const updatedAuth = { ...auth, accessToken: newAccessToken };
-					setAuth(updatedAuth);
-					localStorage.setItem("auth", JSON.stringify(updatedAuth));
+						originalRequest.headers = {
+							...originalRequest.headers,
+							Authorization: `Bearer ${newAccessToken}`,
+						};
 
-					// retry original request with new token
-					originalRequest.headers = {
-						...originalRequest.headers,
-						Authorization: `Bearer ${newAccessToken}`,
-					};
-
-					return axiosInstance(originalRequest);
-
-				} catch (refreshErr) {
-					return Promise.reject(refreshErr);
+						return instance(originalRequest);
+					} catch (refreshErr) {
+						logout();
+						return Promise.reject(refreshErr);
+					}
 				}
+				return Promise.reject(error);
 			}
+		);
 
-			return Promise.reject(error);
-		}
-	);
+		return instance;
+	}, [auth, setAuth, logout]);
 
 	// Login function
-	const login = async ({ email, password }: LoginInput): Promise<{ success: boolean; message?: string }> => {
+	const login = async ({ email, password }: LoginInput) => {
 		try {
 			const response = await axiosInstance.post("/auth", { email, password });
 			const userData = response.data;
@@ -108,19 +115,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 		}
 	};
 
-	// Logout
-	const logout = () => {
-		localStorage.removeItem("auth");
-		setAuth(null);
-	};
-
 	return (
 		<AuthContext.Provider value={{ auth, login, logout, axiosInstance }}>
 			{children}
 		</AuthContext.Provider>
 	);
 };
-
 
 // Hook to access auth context
 export const useAuth = (): AuthContextType => {

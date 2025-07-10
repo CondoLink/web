@@ -5,12 +5,18 @@ import { OverviewModal } from "../../components/OverviewModal";
 import { isBefore, isThisMonth, isSameMonth, addMonths, parseISO, getYear, getMonth } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from "recharts";
 
+type ValidStatus = "Pending" | "In Progress" | "Completed";
 interface MaintenanceTask {
   id: number;
   task: string;
   dueTo: string;
-  status: "Pending" | "In Progress" | "Completed" | string;
-  [key: string]: any;
+  status: string;
+  buildingId: number;
+  blockId: number;
+  subcontractor: number | null;
+  category: number;
+  comment: string | null;
+  created_at: string;
 }
 
 interface ChartDataItem {
@@ -18,6 +24,10 @@ interface ChartDataItem {
   Pending: number;
   "In Progress": number;
   Completed: number;
+}
+
+function isValidStatus(status: string): status is ValidStatus {
+  return ["Pending", "In Progress", "Completed"].includes(status);
 }
 
 export default function MaintenanceDashboard() {
@@ -61,10 +71,11 @@ export default function MaintenanceDashboard() {
     if (!task.dueTo) return;
     const taskDate = parseISO(task.dueTo);
     if (getYear(taskDate) !== currentYear) return;
+    
     const monthIndex = getMonth(taskDate);
     const status = task.status || "Pending";
 
-    if (chartData[monthIndex][status] !== undefined) {
+    if (isValidStatus(status)) {
       chartData[monthIndex][status]++;
     } else {
       chartData[monthIndex]["Pending"]++;

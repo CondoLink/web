@@ -6,10 +6,13 @@ interface Task {
   id: number;
   task: string;
   dueTo: string;
-  status?: string;
+  status: string;
   buildingId: number;
   blockId: number;
-  subcontractor?: number;
+  subcontractor: number | null;
+  category: number;
+  comment: string | null;
+  created_at: string;
 }
 
 interface OverviewModalProps {

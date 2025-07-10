@@ -30,7 +30,7 @@ export default function DashboardHome() {
 
       if (dashboardData) {
         const updatedUsers = dashboardData.users.map(user =>
-          user.id === userId ? { ...user, approvedBy: auth.id } : user
+          user.id === userId ? { ...user, approvedBy: (auth ? auth.id : null) } : user
         );
         setDashboardData({ ...dashboardData, users: updatedUsers });
         toast.success("Resident approved", {
@@ -121,7 +121,11 @@ export default function DashboardHome() {
           <Button
             size="sm"
             className="bg-green-600 hover:bg-green-700 text-white"
-            onClick={() => handleApprove(row.id, auth.id)}
+            onClick={() => { 
+              if(auth) {
+                handleApprove(row.id, auth.id) 
+              }
+            }}
             disabled={approvingId === row.id}
           >
             {approvingId === row.id ? "Approving..." : "Approve"}

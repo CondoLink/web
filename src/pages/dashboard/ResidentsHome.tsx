@@ -6,19 +6,28 @@ import { OverviewModal } from "../../components/OverviewModal";
 import { isBefore, isThisMonth, isSameMonth, addMonths, parseISO, getYear, getMonth } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from "recharts";
 
+type ValidStatus = "Pending" | "In Progress" | "Completed";
 interface MaintenanceTask {
   id: number;
   task: string;
   dueTo: string;
-  status: "Pending" | "In Progress" | "Completed" | string;
-  [key: string]: any;
+  status: string;
+  buildingId: number;
+  blockId: number;
+  subcontractor: number | null;
+  category: number;
+  comment: string | null;
+  created_at: string;
 }
-
 interface ChartDataItem {
   month: string;
   Pending: number;
   "In Progress": number;
   Completed: number;
+}
+
+function isValidStatus(status: string): status is ValidStatus {
+  return ["Pending", "In Progress", "Completed"].includes(status);
 }
 
 export default function MaintenanceDashboard() {
@@ -61,25 +70,26 @@ export default function MaintenanceDashboard() {
     Completed: 0,
   }));
 
-  maintenanceTasks.forEach((task) => {
-    if (!task.dueTo) return;
-    const taskDate = parseISO(task.dueTo);
-    if (getYear(taskDate) !== currentYear) return;
-    const monthIndex = getMonth(taskDate);
-    const status = task.status || "Pending";
-
-    if (chartData[monthIndex][status] !== undefined) {
-      chartData[monthIndex][status]++;
-    } else {
-      chartData[monthIndex]["Pending"]++;
-    }
-  });
+   maintenanceTasks.forEach((task) => {
+      if (!task.dueTo) return;
+      const taskDate = parseISO(task.dueTo);
+      if (getYear(taskDate) !== currentYear) return;
+      
+      const monthIndex = getMonth(taskDate);
+      const status = task.status || "Pending";
+  
+      if (isValidStatus(status)) {
+        chartData[monthIndex][status]++;
+      } else {
+        chartData[monthIndex]["Pending"]++;
+      }
+    });
 
   return (
     <div className="p-6 rounded-lg bg-white shadow-md min-w-0 overflow-auto" style={{ color: "var(--color-deepTealBlue)" }}>
       <h1 className="text-3xl font-bold mb-6">{dashboardData?.buildings[0]?.name} Overview</h1>
       <p className="text-base text-bold leading-relaxed mb-6">
-        {dashboardData?.blocks.find((block) => block.id = auth.blockId)?.name}
+        {dashboardData?.blocks.find((block) => auth && block.id === auth.blockId)?.name}
       </p>
       {/* Maintenance Summary */}
       <h2 className="text-2xl mb-4" style={{ color: "var(--color-softAqua)" }}>Maintenance Overview</h2>
