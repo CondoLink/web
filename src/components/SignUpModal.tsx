@@ -146,7 +146,6 @@ export function SignUpModal({ open, onOpenChange, userToEdit }: SignUpModalProps
             }
 
             onOpenChange(false);
-            navigate(0); // Reload to show changes
         } catch (error: any) {
             console.error("Error submitting form:", error);
             toast.error("Operation failed", {
