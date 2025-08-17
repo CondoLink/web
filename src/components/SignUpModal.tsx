@@ -22,7 +22,7 @@ interface Blocks {
 interface SignUpModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    userToEdit?: any; // 👈 optional for edit mode
+    userToEdit?: any; 
 }
 
 export function SignUpModal({ open, onOpenChange, userToEdit }: SignUpModalProps) {
@@ -41,7 +41,7 @@ export function SignUpModal({ open, onOpenChange, userToEdit }: SignUpModalProps
 
     const [buildings, setBuildings] = useState<Building[]>([]);
     const [blocks, setBlocks] = useState<Blocks[]>([]);
-    const isEditMode = !!userToEdit; // 👈 detect edit mode
+    const isEditMode = !!userToEdit; 
 
     useEffect(() => {
         if (!open) return; // do nothing if modal is closed
