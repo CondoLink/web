@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useDashboard } from "../contexts/DashboardContext";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Button } from "./ui/button";
@@ -26,8 +26,8 @@ interface SignUpModalProps {
 }
 
 export function SignUpModal({ open, onOpenChange, userToEdit }: SignUpModalProps) {
-    const navigate = useNavigate();
-    const { axiosInstance } = useAuth();
+    const { auth, axiosInstance } = useAuth();
+    const { dashboardData, setDashboardData } = useDashboard();
 
     const [form, setForm] = useState({
         fullName: "",
@@ -131,12 +131,34 @@ export function SignUpModal({ open, onOpenChange, userToEdit }: SignUpModalProps
         try {
             if (isEditMode) {
                 // Update existing user
-                await axiosInstance.put(`/admin/updateUser/${userToEdit.id}`, data, {
-                    headers: { Authorization: `Bearer ${axiosInstance.defaults.headers.Authorization}` },
-                });
-                toast.success("Resident updated", {
-                    description: "The resident’s details were updated successfully.",
-                });
+                const response = await axiosInstance.put(`/admin/updateUser/${userToEdit.id}`, 
+                    data, 
+                    { headers: { Authorization: `Bearer ${auth?.accessToken}` } }
+                );
+
+                const updatedUser = response.data.result;
+
+                if (response.data.success) {
+
+                    // Update user in context
+                    if (dashboardData) {
+                        setDashboardData({
+                            ...dashboardData,
+                            users: dashboardData.users.map(u =>
+                                u.id === updatedUser.id ? updatedUser : u
+                            ),
+                        });
+                    }
+
+                    toast("Resident updated", { description: "Update successful." });
+
+                    setTimeout(() => {
+                        onOpenChange(false);
+                    }, 1500);
+                } else {
+                    toast("Update failed", { description: response.data.message || "Please try again." });
+                }
+                
             } else {
                 // Create new user
                 await axiosInstance.post("/register/user", data);
