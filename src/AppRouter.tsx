@@ -63,7 +63,7 @@ function AppRouter() {
 
           {/* Nested routes to Residents */}
           <Route
-            path="resident"
+            path="residents"
             element={
               <ProtectedRoute allowedRoles={[1]}>
                 <Outlet />
