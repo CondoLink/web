@@ -26,7 +26,7 @@ export function Sidebar() {
       default:
         return (
           <>
-            <SidebarItem to="/dashboard/residents" icon={<Home size={24} />} label="Dashboard" />
+            <SidebarItem to="/dashboard/resident" icon={<Home size={24} />} label="Dashboard" />
           </>
         );
     }
